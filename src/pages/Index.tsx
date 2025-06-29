@@ -117,13 +117,13 @@ const Index = () => {
   };
 
   return (
-    <div className={`min-h-screen flex bg-gradient-to-br ${darkMode ? 'from-[#6C4EE6] to-[#4B2996]' : 'from-[#FFF8E7] to-[#e0d6c3]'} transition-colors duration-500`}>
-      <Sidebar />
+    <div className={`min-h-screen flex ${darkMode ? 'bg-[#101F33]' : 'bg-[#FFF8E7]'} transition-colors duration-500`}>
+      <Sidebar cardColor={darkMode ? '#23234a' : '#FFE0B2'} />
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top bar with stepper and theme toggle */}
-        <div className="flex items-center justify-between px-12 pt-8">
+        <div className="flex flex-col md:flex-row items-center justify-between px-4 md:px-12 pt-4 md:pt-8 gap-4 md:gap-0">
           <Stepper currentStep={currentStep} />
-          <div className="flex items-center gap-2 ml-8">
+          <div className="flex items-center gap-2 ml-0 md:ml-8">
             <span className="uppercase text-xs font-bold tracking-widest text-[#6C4EE6] dark:text-[#C3B6F7]">DARK MODE</span>
             <button
               className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
@@ -135,13 +135,13 @@ const Index = () => {
           </div>
         </div>
         {/* Step content */}
-        <main className="flex-1 flex flex-col items-center justify-center w-full px-2 py-8">
+        <main className="flex-1 flex flex-col items-center justify-center w-full px-2 py-4 md:py-8">
           <div className="w-full max-w-6xl mx-auto">
-            {/* Step 1 & 2: Two-column layout */}
+            {/* Step 1 & 2: Responsive layout */}
             {(currentStep === 0 || currentStep === 1) && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                 {/* Upload Document Card */}
-                <div className="rounded-3xl bg-white/90 dark:bg-[#101F33] shadow-2xl p-8 flex flex-col items-center border-2 border-dashed border-[#C3B6F7] min-h-[340px]">
+                <div className={`rounded-3xl ${darkMode ? 'bg-[#23234a]' : 'bg-[#FFE0B2]'} shadow-2xl p-4 md:p-8 flex flex-col items-center border-2 border-dashed border-[#C3B6F7] min-h-[340px] w-full`}> 
                   <h2 className="text-2xl font-bold text-[#4B2996] dark:text-[#C3B6F7] mb-4">Upload Document</h2>
                   <FileUpload 
                     onFileUpload={handleFileUpload}
@@ -149,19 +149,19 @@ const Index = () => {
                     onRemoveFile={handleStartOver}
                   />
                   {currentStep === 0 && (
-                    <button className="mt-8 px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#4B2996] transition" onClick={handleNext} disabled={!uploadedFile}>Next</button>
+                    <button className="mt-8 w-full md:w-auto px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#4B2996] transition" onClick={handleNext} disabled={!uploadedFile}>Next</button>
                   )}
                 </div>
                 {/* Language Selection Card */}
-                <div className="rounded-3xl bg-[#4B2996] shadow-2xl p-8 flex flex-col items-center min-h-[340px]">
-                  <h2 className="text-2xl font-bold text-white mb-4">Language Selection</h2>
+                <div className={`rounded-3xl ${darkMode ? 'bg-[#23234a]' : 'bg-[#FFE0B2]'} shadow-2xl p-4 md:p-8 flex flex-col items-center min-h-[340px] w-full`}>
+                  <h2 className="text-2xl font-bold text-black dark:text-white mb-4">Language Selection</h2>
                   <LanguageSelector 
                     selectedLanguage={selectedLanguage}
                     onLanguageChange={setSelectedLanguage}
                   />
                   {currentStep === 1 && (
                     <div className="flex justify-end w-full mt-8">
-                      <button className="px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#3a1d6e] transition" onClick={handleNext} disabled={!selectedLanguage}>Next</button>
+                      <button className="w-full md:w-auto px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#3a1d6e] transition" onClick={handleNext} disabled={!selectedLanguage}>Next</button>
                     </div>
                   )}
                 </div>
@@ -169,7 +169,7 @@ const Index = () => {
             )}
             {/* Step 3: Extract & Translate */}
             {currentStep === 2 && (
-              <div className="rounded-3xl bg-white/90 dark:bg-[#101F33] shadow-2xl p-8 border border-[#C3B6F7] w-full flex flex-col gap-6 items-center">
+              <div className={`rounded-3xl ${darkMode ? 'bg-[#23234a]' : 'bg-[#FFE0B2]'} shadow-2xl p-4 md:p-8 border border-[#C3B6F7] w-full flex flex-col gap-6 items-center`}>
                 <h2 className="text-2xl font-bold text-[#4B2996] dark:text-[#C3B6F7] mb-4">Extract & Translate</h2>
                 <ProcessButton
                   onClick={handleProcessDocument}
@@ -177,15 +177,15 @@ const Index = () => {
                   disabled={!uploadedFile}
                 />
                 <DocumentPreview file={uploadedFile} previewUrl={previewUrl} />
-                <div className="flex justify-between w-full mt-8">
-                  <button className="px-8 py-2 rounded-xl bg-[#C3B6F7] text-[#4B2996] font-bold text-lg shadow hover:bg-[#6C4EE6] hover:text-white transition" onClick={handlePrev}>Previous</button>
-                  <button className="px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#3a1d6e] transition" onClick={handleNext} disabled={isProcessing || !ocrResult}>Next</button>
+                <div className="flex flex-col md:flex-row justify-between w-full mt-8 gap-4 md:gap-0">
+                  <button className="w-full md:w-auto px-8 py-2 rounded-xl bg-[#C3B6F7] text-[#4B2996] font-bold text-lg shadow hover:bg-[#6C4EE6] hover:text-white transition" onClick={handlePrev}>Previous</button>
+                  <button className="w-full md:w-auto px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#3a1d6e] transition" onClick={handleNext} disabled={isProcessing || !ocrResult}>Next</button>
                 </div>
               </div>
             )}
             {/* Step 4: Summary */}
             {currentStep === 3 && (
-              <div className="rounded-3xl bg-white/90 dark:bg-[#101F33] shadow-2xl p-8 border border-[#C3B6F7] w-full flex flex-col gap-6 items-center">
+              <div className={`rounded-3xl ${darkMode ? 'bg-[#23234a]' : 'bg-[#FFE0B2]'} shadow-2xl p-4 md:p-8 border border-[#C3B6F7] w-full flex flex-col gap-6 items-center`}>
                 <h2 className="text-2xl font-bold text-[#4B2996] dark:text-[#C3B6F7] mb-4">Summary</h2>
                 <TextOutput 
                   extractedText={ocrResult?.text || ''}
@@ -201,9 +201,9 @@ const Index = () => {
                     fileName={uploadedFile?.name || 'document'}
                   />
                 )}
-                <div className="flex justify-between w-full mt-8">
-                  <button className="px-8 py-2 rounded-xl bg-[#C3B6F7] text-[#4B2996] font-bold text-lg shadow hover:bg-[#6C4EE6] hover:text-white transition" onClick={handlePrev}>Previous</button>
-                  <button className="px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#3a1d6e] transition" onClick={handleStartOver}>Start Over</button>
+                <div className="flex flex-col md:flex-row justify-between w-full mt-8 gap-4 md:gap-0">
+                  <button className="w-full md:w-auto px-8 py-2 rounded-xl bg-[#C3B6F7] text-[#4B2996] font-bold text-lg shadow hover:bg-[#6C4EE6] hover:text-white transition" onClick={handlePrev}>Previous</button>
+                  <button className="w-full md:w-auto px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#3a1d6e] transition" onClick={handleStartOver}>Start Over</button>
                 </div>
               </div>
             )}
