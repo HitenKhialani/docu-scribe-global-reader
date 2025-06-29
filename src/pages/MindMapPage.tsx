@@ -1,7 +1,8 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Volume2, StopCircle } from 'lucide-react';
 import ReactFlow, { Background, Controls, MiniMap, useNodesState, useEdgesState, addEdge, Position } from 'react-flow-renderer';
 
 function parseSummaryToFlow(summary: string) {
@@ -44,7 +45,23 @@ const MindMapPage = () => {
   const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, , onEdgesChange] = useEdgesState(initialEdges);
 
-  // For expand/collapse, you can add logic to dynamically add/remove children nodes
+  // Audio state
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  // Speech synthesis handlers
+  const handlePlayAudio = () => {
+    if (!summary) return;
+    window.speechSynthesis.cancel();
+    const utterance = new window.SpeechSynthesisUtterance(summary);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+  };
+  const handleStopAudio = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex flex-col items-center py-8">
@@ -52,7 +69,31 @@ const MindMapPage = () => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between text-white">
             <span>Mind Map</span>
-            <Button onClick={() => navigate(-1)} variant="outline" size="sm">Back</Button>
+            <div className="flex gap-2 items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center"
+                onClick={handlePlayAudio}
+                disabled={isSpeaking}
+                title="Play summary audio"
+              >
+                <Volume2 className="w-4 h-4 mr-1" />
+                Play
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center"
+                onClick={handleStopAudio}
+                disabled={!isSpeaking}
+                title="Stop audio"
+              >
+                <StopCircle className="w-4 h-4 mr-1" />
+                Stop
+              </Button>
+              <Button onClick={() => navigate(-1)} variant="outline" size="sm">Back</Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>

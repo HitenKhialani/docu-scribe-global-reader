@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Copy, CheckCircle, FileText, Loader2, BookOpen, Pencil } from 'lucide-react';
+import { Copy, CheckCircle, FileText, Loader2, BookOpen, Pencil, Volume2, Pause, Play, StopCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { OCRWord } from '@/utils/ocrService';
 import { getAISuggestion } from '@/utils/aiSuggestions';
@@ -31,6 +31,9 @@ export const TextOutput = ({ extractedText, summary, isProcessing, words, onText
   const [aiLoading, setAiLoading] = useState(false);
   const [showSuggestionsIdx, setShowSuggestionsIdx] = useState<number | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const utteranceRef = useState<SpeechSynthesisUtterance | null>(null)[0];
 
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -93,6 +96,39 @@ export const TextOutput = ({ extractedText, summary, isProcessing, words, onText
       });
     }
   };
+
+  // Speech synthesis handlers
+  const handlePlayAudio = () => {
+    if (!summary) return;
+    window.speechSynthesis.cancel(); // Always cancel any current speech
+    const utterance = new window.SpeechSynthesisUtterance(summary);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+    setIsPaused(false);
+  };
+  const handleStopAudio = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setIsPaused(false);
+  };
+  const handleResumeAudio = () => {
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      setIsPaused(false);
+    }
+  };
+  useEffect(() => {
+    const handlePause = () => setIsPaused(true);
+    const handleResume = () => setIsPaused(false);
+    window.speechSynthesis.addEventListener('pause', handlePause);
+    window.speechSynthesis.addEventListener('resume', handleResume);
+    return () => {
+      window.speechSynthesis.removeEventListener('pause', handlePause);
+      window.speechSynthesis.removeEventListener('resume', handleResume);
+    };
+  }, []);
 
   useEffect(() => {
     if (words && Array.isArray(words) && words.length > 0 && words[0]?.text !== undefined) {
@@ -222,54 +258,44 @@ export const TextOutput = ({ extractedText, summary, isProcessing, words, onText
       {/* Summary Card */}
       {summary && (
         <Card className="transition-all duration-200 hover:shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <BookOpen className="h-5 w-5 text-green-600" />
-                <span>Document Summary</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => navigate('/mindmap', { state: { summary, selectedLanguage } })}
-                  variant="outline"
-                  size="sm"
-                  className="ml-2"
-                >
-                  Generate Mindmap
-                </Button>
-                <Button
-                  onClick={() => handleCopy(summary, true)}
-                  variant="outline"
-                  size="sm"
-                  className="ml-2"
-                >
-                  {copiedSummary ? (
-                    <>
-                      <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy
-                    </>
-                  )}
-                </Button>
-              </div>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-300">
+              <BookOpen className="h-5 w-5" />
+              <span>Document Summary</span>
             </CardTitle>
+            <div className="flex gap-2">
+              {/* Audio Buttons removed */}
+              <Button
+                onClick={() => navigate('/mindmap', { state: { summary, selectedLanguage } })}
+                variant="outline"
+                size="sm"
+                className="ml-2"
+              >
+                Generate Mindmap
+              </Button>
+              <Button
+                onClick={() => handleCopy(summary, true)}
+                variant="outline"
+                size="sm"
+                className="ml-2"
+              >
+                {copiedSummary ? (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                    Copied
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy
+                  </>
+                )}
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                <ul className="list-disc ml-6 text-gray-800 leading-relaxed">
-                  {summary.split(/(?<=[.!?])\s+/).map((point, idx) => (
-                    point.trim() && <li key={idx}>{point.trim()}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="text-sm text-gray-500">
-                <span>Summary length: {summary.length} characters</span>
-              </div>
+            <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4 text-gray-900 dark:text-gray-100 whitespace-pre-line">
+              {summary}
             </div>
           </CardContent>
         </Card>

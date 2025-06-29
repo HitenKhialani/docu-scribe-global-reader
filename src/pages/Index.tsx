@@ -9,7 +9,16 @@ import { DocumentCompare } from '@/components/DocumentCompare';
 import { useToast } from '@/hooks/use-toast';
 import { extractTextFromDocument, OCRResult } from '@/utils/ocrService';
 import { generateSummary } from '@/utils/summaryService';
-import { Sun, Moon, Loader2 } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
+import { Sidebar } from '@/components/Sidebar';
+import { Stepper } from '@/components/Stepper';
+
+const steps = [
+  'Upload Document',
+  'Language Selection',
+  'Extract & Translate',
+  'Summary',
+];
 
 const Index = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -22,6 +31,7 @@ const Index = () => {
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
   const { toast } = useToast();
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
@@ -54,6 +64,7 @@ const Index = () => {
       title: 'File uploaded successfully',
       description: `${file.name} is ready for processing`,
     });
+    setCurrentStep(1);
   };
 
   const handleProcessDocument = async () => {
@@ -77,6 +88,7 @@ const Index = () => {
         title: 'Text extraction completed',
         description: `Extracted ${result.text.length} characters with ${(result.confidence * 100).toFixed(1)}% confidence${translationInfo}`,
       });
+      setCurrentStep(3);
     } catch (error) {
       toast({
         title: 'Processing failed',
@@ -88,126 +100,116 @@ const Index = () => {
     }
   };
 
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) setCurrentStep(currentStep + 1);
+  };
+  const handlePrev = () => {
+    if (currentStep > 0) setCurrentStep(currentStep - 1);
+  };
+  const handleStartOver = () => {
+    setUploadedFile(null);
+    setPreviewUrl(null);
+    setExtractedText('');
+    setOcrResult(null);
+    setCorrectedText('');
+    setCorrectedSummary('');
+    setCurrentStep(0);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2e2257] via-[#4b2996] to-[#6d28d9] flex flex-col">
-      {/* Header */}
-      <header className="w-full py-4 px-6 flex items-center justify-between bg-black/40 backdrop-blur-md border-b border-white/10">
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-bold text-indigo-200 tracking-tight">DocuScan AI</span>
-          <span className="text-xs text-indigo-100/80 ml-2">Multilingual Document Scanner</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-xs text-indigo-100/80 hidden sm:inline">🌐 Support for 50+ languages</span>
-          <button
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
-            onClick={() => setDarkMode((d) => !d)}
-            aria-label="Toggle dark mode"
-          >
-            {darkMode ? <Sun className="text-yellow-400" /> : <Moon className="text-indigo-400" />}
-          </button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-start w-full px-2 py-8">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-center text-indigo-100 mb-2 tracking-tight">Multilingual OCR</h1>
-        <h2 className="text-xl md:text-2xl font-semibold text-center text-indigo-200 mb-6">Made Simple</h2>
-        <p className="text-center text-indigo-100/80 max-w-2xl mb-8">Extract text from documents in multiple languages simultaneously. Get instant translations with perfect layout preservation.</p>
-
-        <div className="w-full max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-          {/* Left Column */}
-          <div className="flex flex-col gap-8 items-stretch">
-            {/* Upload Card */}
-            <div className="rounded-2xl bg-black/80 shadow-xl p-4 md:p-8 flex flex-col items-center border border-white/10 w-full h-full">
-              <FileUpload 
-                onFileUpload={handleFileUpload}
-                uploadedFile={uploadedFile}
-                onRemoveFile={() => {
-                  setUploadedFile(null);
-                  setPreviewUrl(null);
-                  setExtractedText('');
-                  setOcrResult(null);
-                }}
-              />
-            </div>
-            {/* Language Selection Card */}
-            <div className="rounded-2xl bg-black/80 shadow-xl p-4 md:p-8 border border-white/10 w-full h-full">
-              <LanguageSelector 
-                selectedLanguage={selectedLanguage}
-                onLanguageChange={setSelectedLanguage}
-              />
-            </div>
-            {/* Process Button */}
-            <div className="flex justify-center">
-              <ProcessButton
-                onClick={handleProcessDocument}
-                isProcessing={isProcessing}
-                disabled={!uploadedFile}
-              />
-            </div>
-            {/* File Preview Card */}
-            <div className="rounded-2xl bg-black/80 shadow-xl p-4 md:p-8 flex flex-col items-center border border-white/10 w-full h-full">
-              <DocumentPreview file={uploadedFile} previewUrl={previewUrl} />
-            </div>
+    <div className={`min-h-screen flex bg-gradient-to-br ${darkMode ? 'from-[#6C4EE6] to-[#4B2996]' : 'from-[#FFF8E7] to-[#e0d6c3]'} transition-colors duration-500`}>
+      <Sidebar />
+      <div className="flex-1 flex flex-col min-h-screen">
+        {/* Top bar with stepper and theme toggle */}
+        <div className="flex items-center justify-between px-12 pt-8">
+          <Stepper currentStep={currentStep} />
+          <div className="flex items-center gap-2 ml-8">
+            <span className="uppercase text-xs font-bold tracking-widest text-[#6C4EE6] dark:text-[#C3B6F7]">DARK MODE</span>
+            <button
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition"
+              onClick={() => setDarkMode((d) => !d)}
+              aria-label="Toggle dark mode"
+            >
+              {darkMode ? <Sun className="text-yellow-400" /> : <Moon className="text-[#6C4EE6]" />}
+            </button>
           </div>
-          {/* Right Column */}
-          <div className="flex flex-col gap-8 items-stretch">
-            {/* Extracted Text Card */}
-            <div className="rounded-2xl bg-black/80 shadow-xl p-4 md:p-8 border border-white/10 w-full h-full">
-              <TextOutput 
-                extractedText={ocrResult?.text || ''}
-                summary={correctedSummary}
-                isProcessing={isProcessing}
-                words={ocrResult?.words}
-                onTextChange={setCorrectedText}
-                selectedLanguage={selectedLanguage}
-              />
-            </div>
-            {/* Export Options Card */}
-            {correctedText && (
-              <div className="rounded-2xl bg-black/80 shadow-xl p-4 md:p-8 border border-white/10 w-full h-full">
-                <ExportOptions 
-                  extractedText={correctedText}
-                  fileName={uploadedFile?.name || 'document'}
+        </div>
+        {/* Step content */}
+        <main className="flex-1 flex flex-col items-center justify-center w-full px-2 py-8">
+          <div className="w-full max-w-6xl mx-auto">
+            {/* Step 1 & 2: Two-column layout */}
+            {(currentStep === 0 || currentStep === 1) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Upload Document Card */}
+                <div className="rounded-3xl bg-white/90 dark:bg-[#101F33] shadow-2xl p-8 flex flex-col items-center border-2 border-dashed border-[#C3B6F7] min-h-[340px]">
+                  <h2 className="text-2xl font-bold text-[#4B2996] dark:text-[#C3B6F7] mb-4">Upload Document</h2>
+                  <FileUpload 
+                    onFileUpload={handleFileUpload}
+                    uploadedFile={uploadedFile}
+                    onRemoveFile={handleStartOver}
+                  />
+                  {currentStep === 0 && (
+                    <button className="mt-8 px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#4B2996] transition" onClick={handleNext} disabled={!uploadedFile}>Next</button>
+                  )}
+                </div>
+                {/* Language Selection Card */}
+                <div className="rounded-3xl bg-[#4B2996] shadow-2xl p-8 flex flex-col items-center min-h-[340px]">
+                  <h2 className="text-2xl font-bold text-white mb-4">Language Selection</h2>
+                  <LanguageSelector 
+                    selectedLanguage={selectedLanguage}
+                    onLanguageChange={setSelectedLanguage}
+                  />
+                  {currentStep === 1 && (
+                    <div className="flex justify-end w-full mt-8">
+                      <button className="px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#3a1d6e] transition" onClick={handleNext} disabled={!selectedLanguage}>Next</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {/* Step 3: Extract & Translate */}
+            {currentStep === 2 && (
+              <div className="rounded-3xl bg-white/90 dark:bg-[#101F33] shadow-2xl p-8 border border-[#C3B6F7] w-full flex flex-col gap-6 items-center">
+                <h2 className="text-2xl font-bold text-[#4B2996] dark:text-[#C3B6F7] mb-4">Extract & Translate</h2>
+                <ProcessButton
+                  onClick={handleProcessDocument}
+                  isProcessing={isProcessing}
+                  disabled={!uploadedFile}
                 />
+                <DocumentPreview file={uploadedFile} previewUrl={previewUrl} />
+                <div className="flex justify-between w-full mt-8">
+                  <button className="px-8 py-2 rounded-xl bg-[#C3B6F7] text-[#4B2996] font-bold text-lg shadow hover:bg-[#6C4EE6] hover:text-white transition" onClick={handlePrev}>Previous</button>
+                  <button className="px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#3a1d6e] transition" onClick={handleNext} disabled={isProcessing || !ocrResult}>Next</button>
+                </div>
+              </div>
+            )}
+            {/* Step 4: Summary */}
+            {currentStep === 3 && (
+              <div className="rounded-3xl bg-white/90 dark:bg-[#101F33] shadow-2xl p-8 border border-[#C3B6F7] w-full flex flex-col gap-6 items-center">
+                <h2 className="text-2xl font-bold text-[#4B2996] dark:text-[#C3B6F7] mb-4">Summary</h2>
+                <TextOutput 
+                  extractedText={ocrResult?.text || ''}
+                  summary={correctedSummary}
+                  isProcessing={isProcessing}
+                  words={ocrResult?.words}
+                  onTextChange={setCorrectedText}
+                  selectedLanguage={selectedLanguage}
+                />
+                {correctedText && (
+                  <ExportOptions 
+                    extractedText={correctedText}
+                    fileName={uploadedFile?.name || 'document'}
+                  />
+                )}
+                <div className="flex justify-between w-full mt-8">
+                  <button className="px-8 py-2 rounded-xl bg-[#C3B6F7] text-[#4B2996] font-bold text-lg shadow hover:bg-[#6C4EE6] hover:text-white transition" onClick={handlePrev}>Previous</button>
+                  <button className="px-8 py-2 rounded-xl bg-[#6C4EE6] text-white font-bold text-lg shadow hover:bg-[#3a1d6e] transition" onClick={handleStartOver}>Start Over</button>
+                </div>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Compare Documents Card */}
-        <div className="rounded-2xl bg-black/80 shadow-xl p-6 md:p-12 my-8 border border-white/10 w-full max-w-4xl mx-auto">
-          <h3 className="text-xl font-bold text-indigo-100 mb-4 text-center">Compare Documents</h3>
-          <DocumentCompare />
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="w-full bg-black/60 text-indigo-100/80 py-8 px-4 mt-8 border-t border-white/10">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex-1 text-center md:text-left">
-            <div className="font-bold text-indigo-200 text-lg mb-1">DocuScan AI</div>
-            <div className="text-xs">Professional multilingual document scanning powered by AI. Extract and translate text with precision and elegance.</div>
-          </div>
-          <div className="flex-1 text-center">
-            <div className="font-semibold mb-1">Features</div>
-            <ul className="text-xs space-y-1">
-              <li>Multi-language OCR</li>
-              <li>Real-time translation</li>
-              <li>Layout preservation</li>
-              <li>Multiple export formats</li>
-            </ul>
-          </div>
-          <div className="flex-1 text-center md:text-right">
-            <div className="font-semibold mb-1">Connect</div>
-            <div className="flex justify-center md:justify-end gap-3">
-              <a href="#" className="hover:text-indigo-400 transition">Twitter</a>
-              <a href="#" className="hover:text-indigo-400 transition">GitHub</a>
-              <a href="#" className="hover:text-indigo-400 transition">Contact</a>
-            </div>
-          </div>
-        </div>
-      </footer>
+        </main>
+      </div>
     </div>
   );
 };
