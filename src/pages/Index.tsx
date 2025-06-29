@@ -137,6 +137,16 @@ const Index = () => {
         {/* Step content */}
         <main className="flex-1 flex flex-col items-center justify-center w-full px-2 py-4 md:py-8">
           <div className="w-full max-w-6xl mx-auto">
+            {/* Project Header */}
+            <div className="text-center mb-8 md:mb-12">
+              <h1 className="text-4xl md:text-6xl font-bold text-[#4B2996] dark:text-[#C3B6F7] mb-4">
+                DOCU-SCRIBE
+              </h1>
+              <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
+                Transform your documents into intelligent, searchable text with AI-powered OCR and translation
+              </p>
+            </div>
+            
             {/* Step 1 & 2: Responsive layout */}
             {(currentStep === 0 || currentStep === 1) && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
