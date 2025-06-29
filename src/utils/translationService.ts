@@ -1,5 +1,7 @@
 // Translation service that calls backend API
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 export const translateText = async (text: string, targetLanguage: string, sourceLanguage?: string): Promise<string> => {
   try {
     if (!text.trim()) {
@@ -14,7 +16,7 @@ export const translateText = async (text: string, targetLanguage: string, source
 
     for (const chunk of chunks) {
       try {
-        const response = await fetch('/api/translate', {
+        const response = await fetch(`${API_URL}/api/translate`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
